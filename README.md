@@ -1,6 +1,6 @@
 COMP 3005 - Final Project V2
 
-------List of Files------
+-------List of Files-------
 
 1. ddl.sql - sql script that creates all the required tables in the DB
 2. dml.dql - sql script that populates the tables with initial data
@@ -8,7 +8,7 @@ COMP 3005 - Final Project V2
 4. queries.py - python script that contains all the queries used by the script.py prompts and  user interactions
 5. README.txt
 
-------How to Run------
+-------How to Run-------
 
 1. replace details marked within "<>" with your own database credentials in order to connect
 to your DB
