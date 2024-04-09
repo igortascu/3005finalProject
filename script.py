@@ -15,15 +15,61 @@ from queries import get_member_profile
         connection: the databse connection object
 '''
 def get_db_connection():
-    connection_parameters = "dbname='<USERNAME>' user='postgres' host='localhost' password='<PASSWORD>'"
+    connection_parameters = "dbname='finalProject' user='postgres' host='localhost' password='Igor1999'"
    
     try:
         conn = psycopg2.connect(connection_parameters)
+        print("Successfully connected to DB")
         return conn
 
     except psycopg2.DatabaseError as error:
         print(f"Database connection error: {error}")
         return None
+
+'''
+    Function that initializes the database with the dql and dml scripts from the directory
+
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
+def initialize_database(db):
+    # Read DDL script
+    with open('ddl.sql', 'r') as file:
+        ddl_script = file.read()
+    
+    # Read DML script
+    with open('dml.sql', 'r') as file:
+        dml_script = file.read()
+
+    try:
+        cur = db.cursor()
+        cur.execute(ddl_script)
+        cur.execute(dml_script)
+        db.commit()
+        print("Database initialized successfully.")
+    except Exception as e:
+        db.rollback()
+        print(f"Error initializing database: {e}")
+    finally:
+        cur.close()
+
+'''
+    Function that clears the database and makes it ready for new test run
+
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
+def clear_database(db):
+    try:
+        cur = db.cursor()
+        cur.execute("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+        db.commit()
+        print("Database cleared successfully.")
+    except Exception as e:
+        db.rollback()
+        print(f"Error clearing database: {e}")
+    finally:
+        cur.close()
 
 '''
     Main menu function that prints the main menu and handles input prompts
@@ -120,7 +166,17 @@ def admin_menu(db):
 def main():
     
     db = get_db_connection()
-    main_menu(db)
+    #clear_database(db)
+    #initialize_database(db)
+    #main_menu(db)
 
 if __name__ == "__main__":
     main()
+
+
+# 1 TODO: modify dummy data 
+# 2 TODO: finalize menu
+# 3 TODO: start the queries 
+# 4 TODO: double check deadline
+    
+    

@@ -1,3 +1,17 @@
+-- Rooms Table
+CREATE TABLE Rooms (
+    RoomID SERIAL PRIMARY KEY,
+    RoomName VARCHAR(255) NOT NULL,
+    Capacity INT NOT NULL
+);
+
+-- Equipment Table
+CREATE TABLE Equipment (
+    EquipmentID SERIAL PRIMARY KEY,
+    EquipmentName VARCHAR(255) NOT NULL,
+    MaintenanceDate DATE NOT NULL
+);
+
 -- Members Table
 CREATE TABLE Members (
     MemberID SERIAL PRIMARY KEY,
@@ -47,20 +61,6 @@ CREATE TABLE GroupFitnessClasses (
     RoomID INT NOT NULL,
     FOREIGN KEY (TrainerID) REFERENCES Trainers(TrainerID),
     FOREIGN KEY (RoomID) REFERENCES Rooms(RoomID)
-);
-
--- Rooms Table
-CREATE TABLE Rooms (
-    RoomID SERIAL PRIMARY KEY,
-    RoomName VARCHAR(255) NOT NULL,
-    Capacity INT NOT NULL
-);
-
--- Equipment Table
-CREATE TABLE Equipment (
-    EquipmentID SERIAL PRIMARY KEY,
-    EquipmentName VARCHAR(255) NOT NULL,
-    MaintenanceDate DATE NOT NULL
 );
 
 -- Billing Table
