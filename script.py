@@ -23,6 +23,36 @@ def is_valid_id(id_str):
     id_val = int(id_str)
     return id_val > 0
 
+def profile_management(db):
+    print("\n--- Profile Management ---")
+    email = input("Please enter your email to identify your profile: ").strip()
+    # TODO: Validate that the email exists in the database
+
+    print("Which attribute would you like to update?")
+    print("1. First Name")
+    print("2. Last Name")
+    print("3. Date of Birth")
+    print("4. Fitness Goals")
+    print("5. Health Metrics")
+    attribute_choice = input("Enter the number of the attribute you want to update: ").strip()
+    
+    attribute_map = {
+        '1': 'FirstName',
+        '2': 'LastName',
+        '3': 'DateOfBirth',
+        '4': 'FitnessGoals',
+        '5': 'HealthMetrics'
+    }
+
+    if attribute_choice in attribute_map:
+        new_value = input(f"Enter the new value for {attribute_map[attribute_choice]}: ").strip()
+        # TODO: Validate the new_value as appropriate (e.g., date format for DateOfBirth)
+        update_member_attribute(db, email, attribute_map[attribute_choice], new_value)
+    else:
+        print("Invalid choice. Please enter a number between 1-5.")
+    
+    input("Press Enter to return to the Member Menu...")
+
 # ------------------------------ DB INITIALIZATION FUNCTIONS ------------------------------#
 
 '''
@@ -139,7 +169,11 @@ def member_menu(db):
         choice = input("Enter your choice: ")
         if choice == '5':
             main_menu(db)
+        elif choice == '1':
+            get_member_profile()
         elif choice == '2':
+            print("What would you like to update?")
+            print("1. ")
             get_member_profile()
         elif choice == '3':
             get_training_session_schedule()
