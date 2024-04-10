@@ -72,3 +72,13 @@ CREATE TABLE Billing (
     PaymentStatus VARCHAR(50) NOT NULL,
     FOREIGN KEY (MemberID) REFERENCES Members(MemberID)
 );
+
+-- MembersGroupClasses Table
+CREATE TABLE MembersGroupClasses (
+    MemberID INT,
+    ClassID INT,
+    RegistrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (MemberID, ClassID),
+    FOREIGN KEY (MemberID) REFERENCES Members(MemberID),
+    FOREIGN KEY (ClassID) REFERENCES GroupFitnessClasses(ClassID)
+);
