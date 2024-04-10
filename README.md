@@ -13,6 +13,6 @@ COMP 3005 - Final Project V2
 1. replace details marked within "<>" with your own database credentials in order to connect
 to your DB
 
-2. Run the ddl.sql and dml.sql script in your DB
+2. Run the ddl.sql and dml.sql script in your DB or Just run the main function since it automatically injects the scripts
 
 3. Run the python script and play around with the prompts to test DB interactivity
