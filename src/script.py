@@ -93,6 +93,115 @@ def validate_email(email):
     email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     return re.fullmatch(email_regex, email)
 
+# ------------------------------ MENU CLI FUNCTIONS ------------------------------#
+'''
+    Main menu function that prints the main menu and handles input prompts
+
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
+
+def main_menu(db):
+
+    while True:
+        print("Welcome to the Health and Fitness Club Management System")
+        print("Please select your role:")
+        print("1. Member")
+        print("2. Trainer")
+        print("3. Admin")
+        print("Q. Quit")
+        
+        choice = input("Enter your choice (1/2/3/Q): ").strip().upper() 
+        
+        if choice == '1':
+            user_login(db)
+        elif choice == '2':
+            trainer_login(db)
+        elif choice == '3':
+            admin_login(db)
+        elif choice == 'Q':
+            print("Exiting the application.")
+            return
+        else:
+            print("Invalid choice. Please enter 1, 2, 3, or Q.")
+
+'''
+    User login function that either registers or signs in a user
+    
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
+def user_login(db):
+    print("Are you a returning or new member?")
+    print("1. Returning Member")
+    print("2. New Member")
+    member_status = int(input("Status: "))
+    
+    if member_status == 1:
+        member_menu(db)
+    else:
+        print("Welcome to our Gym! Enter your email and password to create an account!")
+        register_user(db)
+
+'''
+    Trainer login function that logs in the trainer staff
+    
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
+def trainer_login(db):
+    print("\n--- Trainer Login ---")
+    email = input("Enter your email: ")
+    password = input("Enter your password: ")
+
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT TrainerID, FirstName, LastName FROM Trainers
+                WHERE Email = %s AND Password = crypt(%s, Password);
+            """, (email, password))
+            trainer = cur.fetchone()
+            if trainer:
+                print(f"Welcome {trainer[1]} {trainer[2]}!")
+                trainer_menu(db)
+            else:
+                print("Invalid login credentials.")
+    except Exception as e:
+        print(f"An error occurred during login: {e}")
+
+'''
+    Admin login function that logs in the admin staff
+    
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
+def admin_login(db):
+    print("\n--- Admin Login ---")
+    email = input("Enter your email: ")
+    password = input("Enter your password: ")  # In a real system, this would be hashed
+
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT StaffID, FirstName, LastName FROM AdministrativeStaff
+                WHERE Email = %s AND Password = crypt(%s, Password);
+            """, (email, password))
+            admin = cur.fetchone()
+            if admin:
+                print(f"Welcome {admin[1]} {admin[2]}!")
+                admin_menu(db)
+            else:
+                print("Invalid login credentials.")
+    except Exception as e:
+        print(f"An error occurred during login: {e}")
+
+
+'''
+    Profile management function to handle user profile change requests
+    
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
 def profile_management(db):
     print("\n--- Profile Management ---")
     email = input("Please enter your email to identify your profile: ").strip()
@@ -123,53 +232,6 @@ def profile_management(db):
     
     input("Press Enter to return to the Member Menu...")
 
-
-# ------------------------------ MENU CLI FUNCTIONS ------------------------------#
-'''
-    Main menu function that prints the main menu and handles input prompts
-
-    parames:
-        db: the database connection in order to access it and query it as user selects options
-'''
-
-def main_menu(db):
-
-    while True:
-        print("Welcome to the Health and Fitness Club Management System")
-        print("Please select your role:")
-        print("1. Member")
-        print("2. Trainer")
-        print("3. Admin")
-        print("Q. Quit")
-        
-        choice = input("Enter your choice (1/2/3/Q): ").strip().upper() 
-        
-        if choice == '1':
-            user_login(db)
-        elif choice == '2':
-            trainer_menu(db)
-        elif choice == '3':
-            admin_menu(db)
-        elif choice == 'Q':
-            print("Exiting the application.")
-            return
-        else:
-            print("Invalid choice. Please enter 1, 2, 3, or Q.")
-            main_menu(db)
-
-def user_login(db):
-    print("Are you a returning or new member?")
-    print("1. Returning Member")
-    print("2. New Member")
-    member_status = int(input("Status: "))
-    
-    if member_status == 1:
-        member_menu(db)
-    else:
-        print("Welcome to our Gym! Enter your email and password to create an account!")
-        email = input("Email: ")
-        password = input("Password: ")
-        register_user(email, password)
 '''
     Member menu function that prints the menu for members and queries respective to their choice
     
@@ -193,9 +255,7 @@ def member_menu(db):
         elif choice == '1':
             get_member_profile()
         elif choice == '2':
-            print("What would you like to update?")
-            print("1. ")
-            get_member_profile()
+            profile_management(db)
         elif choice == '3':
             get_training_session_schedule()
             session_choice = int(input("From the available sessions, pick a time you would like: "))
@@ -343,4 +403,3 @@ def main():
 
 if __name__ == "__main__":
     main()
- 
