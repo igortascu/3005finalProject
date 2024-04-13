@@ -33,7 +33,8 @@ CREATE TABLE Trainers (
     LastName VARCHAR(255) NOT NULL,
     Email VARCHAR(255) UNIQUE NOT NULL,
     Password VARCHAR(255) NOT NULL,
-    Availability TEXT
+    Availability TIMESTAMP NOT NULL,
+    IsAvailable BOOLEAN DEFAULT TRUE
 );
 
 -- AdministrativeStaff Table
@@ -49,10 +50,10 @@ CREATE TABLE AdministrativeStaff (
 -- PersonalTrainingSessions Table
 CREATE TABLE PersonalTrainingSessions (
     SessionID SERIAL PRIMARY KEY,
-    MemberID INT NOT NULL,
-    TrainerID INT NOT NULL,
-    DateTime TIMESTAMP NOT NULL,
-    Status VARCHAR(50) NOT NULL,
+    MemberID INT REFERENCES Members(MemberID),
+    TrainerID INT REFERENCES Trainers(TrainerID),
+    ScheduledTime TIMESTAMP NOT NULL,
+    Status VARCHAR(50) DEFAULT 'Free',
     FOREIGN KEY (MemberID) REFERENCES Members(MemberID),
     FOREIGN KEY (TrainerID) REFERENCES Trainers(TrainerID)
 );

@@ -7,6 +7,7 @@ for the program
 '''
 from script import validate_email
 from psycopg2 import sql
+import json
 
 #-------------- MEMBER QUERIES ---------------#
 def get_member_profile(db, email):
@@ -104,32 +105,61 @@ def update_member_attribute(db, email, attribute, new_value):
 def get_training_session_schedule(db):
     try:
         with db.cursor() as cur:
-            cur.execute("SELECT SessionID, DateTime, Status, TrainerID FROM PersonalTrainingSessions WHERE Status = 'Scheduled'")
-            sessions = cur.fetchall()
-            print("\n--- Training Session Schedule ---")
-            for session in sessions:
-                print(f"Session ID: {session[0]}, DateTime: {session[1]}, Status: {session[2]}, Trainer ID: {session[3]}")
-            if not sessions:
-                print("No scheduled training sessions found.")
+            # Select all trainers and their availability status
+            cur.execute("""
+                SELECT TrainerID, FirstName, LastName, Availability, IsAvailable
+                FROM Trainers
+                WHERE IsAvailable = TRUE
+                ORDER BY LastName, FirstName;
+            """)
+            trainers = cur.fetchall()
+            print("\n--- Trainer Availability ---")
+            for trainer in trainers:
+                trainer_name = f"{trainer[1]} {trainer[2]}"
+                available_times = trainer[3]  # Assuming this is a JSON string or similar
+                available = 'Available' if trainer[4] else 'Not Available'
+                print(f"Trainer: {trainer_name}, Availability: {available_times}, Status: {available}")
+            if not trainers:
+                print("No trainers are currently available.")
     except Exception as e:
-        print(f"An error occurred while retrieving the training session schedule: {e}")
-    input("Press Enter to return to the previous menu...")
+        print(f"An error occurred while retrieving the trainers' availability: {e}")
 
-def schedule_member_session(db, member_email, session_id):
-    print("Scheduling Session...")
+def schedule_member_session(db, member_email, trainer_id):
+    print("Scheduling Personal Training Session...")
     try:
         with db.cursor() as cur:
-            # Begin by checking if the session ID exists and is available
-            cur.execute("SELECT Status FROM PersonalTrainingSessions WHERE SessionID = %s", (session_id,))
-            session = cur.fetchone()
-            if session and session[0] == 'Scheduled':
-                # Update the session to be booked by the member
-                cur.execute("UPDATE PersonalTrainingSessions SET MemberID = (SELECT MemberID FROM Members WHERE Email = %s), Status = 'Booked' WHERE SessionID = %s",
-                            (member_email, session_id))
-                db.commit()
-                print(f"Training session {session_id} has been scheduled successfully for member with email {member_email}.")
+            # Fetch the trainer's next available time
+            cur.execute("""
+                SELECT Availability FROM Trainers
+                WHERE TrainerID = %s AND IsAvailable = TRUE;
+            """, (trainer_id,))
+            availability = cur.fetchone()
+            if availability:
+                # Schedule the session using the trainer's next available time
+                cur.execute("""
+                    SELECT MemberID FROM Members
+                    WHERE Email = %s;
+                """, (member_email,))
+                member = cur.fetchone()
+                if member:
+                    member_id = member[0]
+                    # Book the session by creating a record in PersonalTrainingSessions
+                    cur.execute("""
+                        INSERT INTO PersonalTrainingSessions (MemberID, TrainerID, ScheduledTime, Status)
+                        VALUES (%s, %s, %s, 'Booked');
+                    """, (member_id, trainer_id, availability[0]))
+                    # Optionally, update the trainer's availability
+                    cur.execute("""
+                        UPDATE Trainers
+                        SET IsAvailable = FALSE
+                        WHERE TrainerID = %s;
+                    """, (trainer_id,))
+                    db.commit()
+                    print(f"Personal training session has been scheduled with trainer ID {trainer_id} for member with email {member_email} at {availability[0]}.")
+                else:
+                    print("Member email not found.")
             else:
-                print("The session is not available for scheduling.")
+                print("The selected trainer is not available or does not exist.")
     except Exception as e:
         db.rollback()
         print(f"An error occurred while scheduling the session: {e}")
@@ -138,111 +168,121 @@ def schedule_member_session(db, member_email, session_id):
 def get_fitness_classes_table(db):
     try:
         with db.cursor() as cur:
-            cur.execute("SELECT ClassID, ClassName, DateTime, TrainerID FROM GroupFitnessClasses")
+            cur.execute("""
+                SELECT gfc.ClassID, gfc.ClassName, gfc.DateTime, t.FirstName, t.LastName
+                FROM GroupFitnessClasses gfc
+                JOIN Trainers t ON gfc.TrainerID = t.TrainerID
+                ORDER BY gfc.DateTime;
+            """)
             classes = cur.fetchall()
             print("\n--- Group Fitness Classes Table ---")
             for class_info in classes:
-                print(f"Class ID: {class_info[0]}, Class Name: {class_info[1]}, DateTime: {class_info[2]}, Trainer ID: {class_info[3]}")
+                trainer_name = f"{class_info[3]} {class_info[4]}"
+                print(f"Class ID: {class_info[0]}, Class Name: {class_info[1]}, DateTime: {class_info[2]}, Trainer: {trainer_name}")
             if not classes:
                 print("No fitness classes found.")
     except Exception as e:
         print(f"An error occurred while retrieving the fitness classes: {e}")
-    input("Press Enter to return to the previous menu...")
 
-def schedule_group_fitness_session(db, member_email, class_id):
-    print("Scheduling Group Fitness Session...")
+def register_for_fitness_class(db, member_email, class_id):
+    print("Registering for a Fitness Class...")
     try:
         with db.cursor() as cur:
-            # Check if the class exists and has available spots
-            cur.execute("SELECT ClassName, DateTime FROM GroupFitnessClasses WHERE ClassID = %s", (class_id,))
+            # Check if the class exists
+            cur.execute("""
+                SELECT ClassName, DateTime, t.FirstName, t.LastName
+                FROM GroupFitnessClasses gfc
+                JOIN Trainers t ON gfc.TrainerID = t.TrainerID
+                WHERE gfc.ClassID = %s;
+            """, (class_id,))
             class_info = cur.fetchone()
             if class_info:
                 # Insert a record into the associative table that links members to classes
-                cur.execute("INSERT INTO MembersGroupClasses (MemberID, ClassID) SELECT MemberID, %s FROM Members WHERE Email = %s", (class_id, member_email))
+                cur.execute("""
+                    INSERT INTO MembersGroupClasses (MemberID, ClassID)
+                    SELECT MemberID, %s FROM Members WHERE Email = %s;
+                """, (class_id, member_email))
                 db.commit()
-                print(f"Successfully scheduled class '{class_info[0]}' at {class_info[1]} for member with email {member_email}.")
+                trainer_name = f"{class_info[2]} {class_info[3]}"
+                print(f"You have been registered for the class '{class_info[0]}' with {trainer_name} at {class_info[1]}.")
             else:
-                print("The class does not exist or is not available.")
+                print("The class does not exist or registration is not available.")
     except Exception as e:
         db.rollback()
-        print(f"An error occurred while scheduling the group fitness session: {e}")
-    input("Press Enter to return to the previous menu...")
+        print(f"An error occurred while registering for the fitness class: {e}")
+    input("Press Enter to continue...")
 
-def add_member_to_fitness_class(db, member_email, class_id):
-    print("Adding you to a Fitness Class...")
-    try:
-        with db.cursor() as cur:
-            # Check if the class exists and has available spots
-            cur.execute("SELECT ClassName, DateTime FROM GroupFitnessClasses WHERE ClassID = %s", (class_id,))
-            class_info = cur.fetchone()
-            if class_info:
-                # Insert a record into the associative table that links members to classes
-                cur.execute("INSERT INTO MembersGroupClasses (MemberID, ClassID) SELECT MemberID, %s FROM Members WHERE Email = %s", (class_id, member_email))
-                db.commit()
-                print(f"You have been added to the class '{class_info[0]}' at {class_info[1]}.")
-            else:
-                print("The class does not exist or is not available.")
-    except Exception as e:
-        db.rollback()
-        print(f"An error occurred while adding you to the fitness class: {e}")
-    input("Press Enter to return to the previous menu...")
 
 #-------------- TRAINER QUERIES ---------------#
 def get_trainer_schedule(db, trainer_id):
     try:
         with db.cursor() as cur:
+            # Get the booked sessions.
             cur.execute("""
-                SELECT ts.SessionID, ts.DateTime, ts.Status, m.FirstName, m.LastName 
+                SELECT ts.SessionID, ts.ScheduledTime, ts.Status, m.FirstName, m.LastName 
                 FROM PersonalTrainingSessions ts
                 JOIN Members m ON ts.MemberID = m.MemberID
-                WHERE ts.TrainerID = %s
-                ORDER BY ts.DateTime;
+                WHERE ts.TrainerID = %s AND ts.Status = 'Booked'
+                ORDER BY ts.ScheduledTime;
             """, (trainer_id,))
-            schedule = cur.fetchall()
+            sessions = cur.fetchall()
+            
+            # Now get the trainer's next available time.
+            cur.execute("""
+                SELECT Availability FROM Trainers
+                WHERE TrainerID = %s;
+            """, (trainer_id,))
+            next_available = cur.fetchone()
+
             print("\n--- Trainer Schedule ---")
-            for session in schedule:
-                print(f"Session ID: {session[0]}, DateTime: {session[1]}, Status: {session[2]}, Member: {session[3]} {session[4]}")
-            if not schedule:
-                print("No sessions found for this trainer.")
+            
+            if sessions:
+                for session in sessions:
+                    print(f"Session ID: {session[0]}, Scheduled Time: {session[1]}, Status: {session[2]}, Member: {session[3]} {session[4]}")
+            else:
+                print("No booked sessions found for this trainer.")
+            
+            if next_available:
+                print(f"Next Available Time: {next_available[0]}")
+            else:
+                print("No availability information found for this trainer.")
+                
     except Exception as e:
         print(f"An error occurred while retrieving the trainer's schedule: {e}")
-    input("Press Enter to return to the previous menu...")
 
-def set_trainer_availability(db, trainer_id, availability):
+
+def set_trainer_availability(db, trainer_id, new_availability):
     try:
         with db.cursor() as cur:
-            # Assuming availability is a string representing the trainer's available time slots, e.g., 'Monday 10-12, Wednesday 14-16'
+            # Assuming new_availability is a string representing the trainer's new available timestamp, e.g., '2024-04-20 09:00:00'
             cur.execute("""
                 UPDATE Trainers
-                SET Availability = %s
+                SET Availability = %s, IsAvailable = TRUE
                 WHERE TrainerID = %s;
-            """, (availability, trainer_id))
+            """, (new_availability, trainer_id))
             db.commit()
             print("Trainer's availability updated successfully.")
     except Exception as e:
         db.rollback()
         print(f"An error occurred while setting the trainer's availability: {e}")
-    input("Press Enter to return to the previous menu...")
 
 def get_trainers_members(db, trainer_id):
     try:
         with db.cursor() as cur:
             cur.execute("""
-                SELECT m.MemberID, m.FirstName, m.LastName, m.Email 
+                SELECT DISTINCT m.MemberID, m.FirstName, m.LastName, m.Email 
                 FROM Members m
                 JOIN PersonalTrainingSessions ts ON m.MemberID = ts.MemberID
-                WHERE ts.TrainerID = %s
-                GROUP BY m.MemberID;
+                WHERE ts.TrainerID = %s AND ts.Status = 'Booked';
             """, (trainer_id,))
             members = cur.fetchall()
             print("\n--- Trainer's Clients ---")
             for member in members:
                 print(f"Member ID: {member[0]}, Name: {member[1]} {member[2]}, Email: {member[3]}")
             if not members:
-                print("No members found for this trainer.")
+                print("No members currently booked with this trainer.")
     except Exception as e:
         print(f"An error occurred while retrieving the trainer's clients: {e}")
-    input("Press Enter to return to the previous menu...")
 
 #-------------- ADMIN QUERIES ---------------#
 def get_rooms(db):

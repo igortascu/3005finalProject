@@ -202,7 +202,9 @@ def trainer_login(db):
             trainer = cur.fetchone()
             if trainer:
                 print(f"Welcome {trainer[1]} {trainer[2]}!")
-                trainer_menu(db)
+                # get id
+                id = 0
+                trainer_menu(db, id)
             else:
                 print("Invalid login credentials.")
     except Exception as e:
@@ -294,12 +296,15 @@ def member_menu(db, member_email):
             profile_management(db, member_email)
         elif choice == '3':
             get_training_session_schedule(db)
-            session_choice = int(input("From the available sessions, pick the ID of a session you would like: "))
-            schedule_member_session(db, session_choice, member_email)
+            try:
+                trainer_choice = int(input("From the available trainers, pick the ID of a trainer you would like to book: "))
+                schedule_member_session(db, member_email, trainer_choice)
+            except ValueError:
+                print("Invalid input. Please enter a numeric trainer ID.")
         elif choice == '4':
-            get_fitness_classes_table()
-            session_choice = int(input("From the available sessions, pick a time you would like: "))
-            schedule_group_fitness_session(db, session_choice)
+            get_fitness_classes_table(db)
+            session_choice = int(input("From the available sessions, pick a slot ID you would like: "))
+            register_for_fitness_class(db, member_email, session_choice)
 
 '''
     Trainer menu function that prints the menu for trainers and queries respective to their choice
@@ -307,7 +312,7 @@ def member_menu(db, member_email):
     parames:
         db: the database connection in order to access it and query it as user selects options
 '''
-def trainer_menu(db):
+def trainer_menu(db, id):
     while True:
         print("\n--- Trainer Menu ---")
         print("1. View Schedule")
@@ -319,10 +324,10 @@ def trainer_menu(db):
         if choice == '4':
             main_menu(db)
         elif choice == '1':
-            get_trainer_schedule(db)
+            get_trainer_schedule(db, id)
         elif choice == '2':
             availabilty = input("Set the time you are available for in (DAY, TIME) format")
-            set_trainer_availability(db, availabilty)
+            set_trainer_availability(db, id, availabilty)
         elif choice == '3':
             get_all_members(db)
         
@@ -345,10 +350,9 @@ def admin_menu(db):
         if choice == '5':
             main_menu(db)
         elif choice == '1':
-            get_rooms()
-            # TODO: add management 
+            get_rooms(db)
         elif choice == '2':
-            get_equipment_table()
+            get_equipment_table(db)
 
             while True:
                 print("\n--- What would you like to update ---")
@@ -360,7 +364,7 @@ def admin_menu(db):
                 maintenance_choice = input("Enter your choice: ")
 
                 if maintenance_choice == '4':
-                    admin_menu()
+                    admin_menu(db)
                 elif maintenance_choice == '1':
                     while True:
                         equipment_id = int(input("Enter the equipment ID number to update: "))
@@ -377,7 +381,6 @@ def admin_menu(db):
                     add_equipment(db, equipment_name, maintenance_date)
                 elif maintenance_choice == '3':
                     equipment_id = int(input("Enter the equipment ID number to remove: "))
-                    # TODO: validate ID
                     remove_equipment(db, equipment_id)
         
         elif choice == '3':
@@ -391,22 +394,19 @@ def admin_menu(db):
                 schedule_choice = input("Enter your choice: ")
 
                 if schedule_choice == '4':
-                    break  # Exit Class Schedule Updates, return to Admin Menu
+                    break
                 elif schedule_choice == '1':
                     class_id = int(input("Enter the class ID to update the schedule: "))
                     new_datetime = input("Enter the new date and time for the class (YYYY-MM-DD HH:MM): ")
-                    # TODO: Validate date format and existence of class_id
                     update_class_schedule(db, class_id, new_datetime)
                 elif schedule_choice == '2':
                     class_name = input("Enter the name of the new class: ")
                     datetime = input("Enter the date and time for the new class (YYYY-MM-DD HH:MM): ")
                     trainer_id = int(input("Enter the trainer ID for the class: "))
                     room_id = int(input("Enter the room ID for the class: "))
-                    # TODO: Validate inputs
                     add_class_schedule(db, class_name, datetime, trainer_id, room_id)
                 elif schedule_choice == '3':
                     class_id = int(input("Enter the class ID to remove from the schedule: "))
-                    # TODO: Validate existence of class_id
                     remove_class_schedule(db, class_id)
         elif choice == '4':
             while True:
@@ -417,13 +417,12 @@ def admin_menu(db):
                 billing_choice = input("Enter your choice: ")
 
                 if billing_choice == '2':
-                    break  # Exit Billing and Payments, return to Admin Menu
+                    break
                 elif billing_choice == '1':
                     member_id = int(input("Enter the member ID to process the billing: "))
                     amount = float(input("Enter the billing amount: "))
                     date = input("Enter the billing date (YYYY-MM-DD): ")
                     status = input("Enter the billing status (Paid/Unpaid): ")
-                    # TODO: Validate inputs
                     process_billing(db, member_id, amount, date, status)
 
 '''
