@@ -312,7 +312,6 @@ def get_equipment_table(db):
                 print("No equipment found.")
     except Exception as e:
         print(f"An error occurred while retrieving equipment: {e}")
-    input("Press Enter to return to the previous menu...")
 
 def update_equipment_maintenance_date(db, equipment_id, new_date):
     print(f"Updating maintenance date for equipment ID {equipment_id} to {new_date}...")
@@ -353,6 +352,22 @@ def remove_equipment(db, equipment_id):
     except Exception as e:
         db.rollback()
         print(f"An error occurred while removing equipment: {e}")
+
+def get_class_schedules(db):
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                SELECT ClassID, ClassName, DateTime, TrainerID, RoomID FROM GroupFitnessClasses
+                ORDER BY DateTime;
+            """)
+            classes = cur.fetchall()
+            print("\n--- Current Class Schedules ---")
+            for cls in classes:
+                print(f"Class ID: {cls[0]}, Name: {cls[1]}, Date and Time: {cls[2]}, Trainer ID: {cls[3]}, Room ID: {cls[4]}")
+            if not classes:
+                print("No class schedules found.")
+    except Exception as e:
+        print(f"An error occurred while retrieving class schedules: {e}")
 
 def update_class_schedule(db, class_id, new_datetime):
     try:
@@ -400,7 +415,7 @@ def process_billing(db, member_id, amount, date, status):
                 INSERT INTO Billing (MemberID, Amount, Date, PaymentStatus) 
                 VALUES (%s, %s, %s, %s) 
                 ON CONFLICT (MemberID) DO UPDATE 
-                SET Amount = excluded.Amount, Date = excluded.Date, PaymentStatus = excluded.Status
+                SET Amount = excluded.Amount, Date = excluded.Date, PaymentStatus = excluded.PaymentStatus
             """, (member_id, amount, date, status))
             db.commit()
             print(f"Billing processed for member ID {member_id}: Amount: {amount}, Date: {date}, Status: {status}.")

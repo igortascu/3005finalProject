@@ -94,6 +94,12 @@ def validate_email(email):
     email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
     return re.fullmatch(email_regex, email)
 
+def parse_datetime(input_str):
+    try:
+        return datetime.datetime.strptime(input_str, "%Y-%m-%d %H:%M")
+    except ValueError:
+        return None
+
 # ------------------------------ MENU CLI FUNCTIONS ------------------------------#
 '''
     Main menu function that prints the main menu and handles input prompts
@@ -351,6 +357,7 @@ def admin_menu(db):
             main_menu(db)
         elif choice == '1':
             get_rooms(db)
+            print("What would you like to manage? ")
         elif choice == '2':
             get_equipment_table(db)
 
@@ -384,6 +391,7 @@ def admin_menu(db):
                     remove_equipment(db, equipment_id)
         
         elif choice == '3':
+            get_class_schedules(db)
             while True:
                 print("\n--- Class Schedule Updates ---")
                 print("1. Update a Class Schedule")
