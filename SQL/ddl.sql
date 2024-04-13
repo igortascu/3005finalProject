@@ -11,7 +11,7 @@ CREATE TABLE Rooms (
 CREATE TABLE Equipment (
     EquipmentID SERIAL PRIMARY KEY,
     EquipmentName VARCHAR(255) NOT NULL,
-    LastMaintenanceDate DATE NOT NULL
+    MaintenanceDate DATE NOT NULL
 );
 
 -- Members Table

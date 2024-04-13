@@ -25,7 +25,7 @@ VALUES
 ('Cycling Room', 15),
 ('Weight Room', 50);
 
-INSERT INTO Equipment (EquipmentName, LastMaintenanceDate)
+INSERT INTO Equipment (EquipmentName, MaintenanceDate)
 VALUES 
 ('Treadmill #1', '2023-08-01'),
 ('Treadmill #2', '2023-08-01'),
