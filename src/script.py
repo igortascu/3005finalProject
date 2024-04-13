@@ -38,11 +38,11 @@ def get_db_connection():
 '''
 def initialize_database(db):
     # Read DDL script
-    with open('ddl.sql', 'r') as file:
+    with open('../SQL/ddl.sql', 'r') as file:
         ddl_script = file.read()
     
     # Read DML script
-    with open('dml.sql', 'r') as file:
+    with open('../SQL/dml.sql', 'r') as file:
         dml_script = file.read()
 
     try:
@@ -398,7 +398,7 @@ def main():
     
     db = get_db_connection()
     #clear_database(db)
-    #initialize_database(db)
+    initialize_database(db)
     main_menu(db)
 
 if __name__ == "__main__":
