@@ -5,49 +5,10 @@ Igor Tascu
 queries.py - source code file for COMP 3005 Final Project V2, contains all the queries required 
 for the program
 '''
-from script import validate_email, member_menu
+from script import validate_email
+from psycopg2 import sql
 
 #-------------- MEMBER QUERIES ---------------#
-def register_user(db):
-    print("Welcome to our Gym! Let's get you signed up.")
-    email = input("Email: ")
-    if not validate_email(email):
-        print("Invalid email format. Please try again.")
-        return
-    password = input("Password: ")  # Password should be hashed for security
-    # TODO: Additional member information (e.g., name, date of birth) and validation
-    first_name = input("First Name: ")
-    last_name = input("Last Name: ")
-    date_of_birth = input("Date of Birth (YYYY-MM-DD): ")  # Ensure proper date format
-    
-    # Attempt to insert the new member into the database
-    try:
-        with db.cursor() as cur:
-            cur.execute("""
-                INSERT INTO Members (FirstName, LastName, Email, DateOfBirth, Password) 
-                VALUES (%s, %s, %s, %s, crypt(%s, gen_salt('bf')))
-            """, (first_name, last_name, email, date_of_birth, password))
-            db.commit()
-            print("Your account has been created!")
-            
-            # Process initial payment
-            amount = float(input("Initial Payment Amount ($): "))  # Assume positive float
-            payment_status = 'Paid'  # As this is initial registration, assume payment is made
-            cur.execute("""
-                INSERT INTO Billing (MemberID, Amount, Date, PaymentStatus) 
-                VALUES ((SELECT MemberID FROM Members WHERE Email = %s), %s, CURRENT_DATE, %s)
-            """, (email, amount, payment_status))
-            db.commit()
-            print("Your payment has been processed. Welcome to the club!")
-            
-    except Exception as e:
-        db.rollback()
-        print(f"An error occurred while creating your account: {e}")
-        return
-    
-    # Log the new member in after successful registration
-    member_menu(db)
-
 def get_member_profile(db, email):
     try:
         with db.cursor() as cur:
@@ -55,18 +16,56 @@ def get_member_profile(db, email):
             profile = cur.fetchone()
             if profile:
                 print("\n--- Member Profile ---")
-                # Assuming columns are in the following order: MemberID, FirstName, LastName, Email, DateOfBirth, FitnessGoals, HealthMetrics
                 print(f"Member ID: {profile[0]}")
                 print(f"First Name: {profile[1]}")
                 print(f"Last Name: {profile[2]}")
                 print(f"Email: {profile[3]}")
-                print(f"Date of Birth: {profile[4]}")
-                print(f"Fitness Goals: {profile[5]}")
-                print(f"Health Metrics: {profile[6]}\n")
+                print(f"Date of Birth: {profile[5]}")
+                print(f"Fitness Goals: {profile[6]}")
+                print(f"Health Metrics: {profile[7]}\n")
             else:
                 print("Profile not found.")
     except Exception as e:
         print(f"An error occurred while retrieving the profile: {e}")
+
+def register_user(db):
+    print("Welcome to our Gym! Here is the sign up form!")
+    email = input("Email: ")
+    if not validate_email(email):
+        print("Invalid email format. Please try again.")
+        return
+    password = input("Password: ")
+    first_name = input("First Name: ")
+    last_name = input("Last Name: ")
+    date_of_birth = input("Date of Birth (YYYY-MM-DD): ")
+    fitness_goals = " "
+    health_metrics = " "
+
+    # Insert new member into the DB
+    try:
+        with db.cursor() as cur:
+            cur.execute("""
+                INSERT INTO Members (FirstName, LastName, Email, Password, DateOfBirth, FitnessGoals, HealthMetrics) 
+                VALUES (%s, %s, %s, crypt(%s, gen_salt('bf')), %s, %s, %s)
+            """, (first_name, last_name, email, password, date_of_birth, fitness_goals, health_metrics))
+            db.commit()
+            print("Your account has been created!")
+            
+            # Process initial payment
+            amount = float(input("Initial Payment Amount ($): "))
+            payment_status = 'Paid'
+            cur.execute("""
+                INSERT INTO Billing (MemberID, Amount, Date, PaymentStatus) 
+                VALUES ((SELECT MemberID FROM Members WHERE Email = %s), %s, CURRENT_DATE, %s)
+            """, (email, amount, payment_status))
+            db.commit()
+            print("Your payment has been processed. Welcome to the gym!")
+            return email
+            
+    except Exception as e:
+        db.rollback()
+        print(f"An error occurred while creating your account: {e}")
+        return False
 
 def get_all_members(db):
     try:
@@ -75,31 +74,31 @@ def get_all_members(db):
             members = cur.fetchall()
             print("\n--- All Members ---")
             for profile in members:
-                # Assuming columns are in the following order: MemberID, FirstName, LastName, Email, DateOfBirth, FitnessGoals, Health Metrics
                 print(f"Member ID: {profile[0]}, Name: {profile[1]} {profile[2]}, Email: {profile[3]}")
             if not members:
                 print("No members found.")
     except Exception as e:
         print(f"An error occurred while retrieving all members: {e}")
 
-
 def update_member_attribute(db, email, attribute, new_value):
+    attribute = attribute.lower()
     try:
         with db.cursor() as cur:
-            # Using psycopg2's SQL module to safely create the query
-            # This helps prevent SQL injection by safely creating a SQL identifier
-            from psycopg2 import sql
             cur.execute(
-                sql.SQL("UPDATE Members SET {} = %s WHERE Email = %s").format(
+                sql.SQL("UPDATE members SET {} = %s WHERE email = %s").format(
                     sql.Identifier(attribute)
                 ),
                 (new_value, email)
             )
-            db.commit()
-            print(f"{attribute} updated successfully.")
+            if cur.rowcount:
+                db.commit()
+                print(f"{attribute} updated successfully.")
+            else:
+                print("The attribute was not updated. Please check if the email is correct.")
     except Exception as e:
         db.rollback()
         print(f"An error occurred: {e}")
+
 
 # Print out the current schedule for member to view slots
 def get_training_session_schedule(db):

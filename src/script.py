@@ -7,6 +7,7 @@ script.py - source code file for COMP 3005 Final Project V2, executes the progra
 
 import psycopg2
 import re
+import getpass
 from datetime import datetime
 from queries import *
 
@@ -125,6 +126,36 @@ def main_menu(db):
         else:
             print("Invalid choice. Please enter 1, 2, 3, or Q.")
 
+
+'''
+    User login function that promts user for details and logs them in
+    
+    parames:
+        db: the database connection in order to access it and query it as user selects options
+'''
+def login_user(db):
+    email = input("Email: ").strip()
+    # Hide password input for security
+    password = getpass.getpass("Password: ")
+
+    try:
+        with db.cursor() as cur:
+            # Check if the email exists and the password matches
+            cur.execute("""
+                SELECT Email FROM Members
+                WHERE Email = %s AND Password = crypt(%s, Password);
+            """, (email, password))
+            result = cur.fetchone()
+            if result:
+                print("Login successful!")
+                return email
+            else:
+                print("Login failed. Please check your credentials and try again.")
+                return None
+    except Exception as e:
+        print(f"An error occurred during login: {e}")
+        return None
+
 '''
     User login function that either registers or signs in a user
     
@@ -136,12 +167,20 @@ def user_login(db):
     print("1. Returning Member")
     print("2. New Member")
     member_status = int(input("Status: "))
-    
+
     if member_status == 1:
-        member_menu(db)
+        member_email = login_user(db)
+        if member_email:
+            member_menu(db, member_email)
     else:
         print("Welcome to our Gym! Enter your email and password to create an account!")
-        register_user(db)
+        member_email = register_user(db)
+
+        if member_email:
+            # Log the new member in after successful registration
+            member_menu(db, member_email)
+        else:
+            print("Registration failed")
 
 '''
     Trainer login function that logs in the trainer staff
@@ -202,10 +241,8 @@ def admin_login(db):
     parames:
         db: the database connection in order to access it and query it as user selects options
 '''
-def profile_management(db):
+def profile_management(db, email):
     print("\n--- Profile Management ---")
-    email = input("Please enter your email to identify your profile: ").strip()
-    # TODO: Validate that the email exists in the database
 
     print("Which attribute would you like to update?")
     print("1. First Name")
@@ -225,7 +262,6 @@ def profile_management(db):
 
     if attribute_choice in attribute_map:
         new_value = input(f"Enter the new value for {attribute_map[attribute_choice]}: ").strip()
-        # TODO: Validate the new_value as appropriate (e.g., date format for DateOfBirth)
         update_member_attribute(db, email, attribute_map[attribute_choice], new_value)
     else:
         print("Invalid choice. Please enter a number between 1-5.")
@@ -238,7 +274,7 @@ def profile_management(db):
     parames:
         db: the database connection in order to access it and query it as user selects options
 '''
-def member_menu(db):
+def member_menu(db, member_email):
     print("WELCOME!")
     
     while True:
@@ -253,14 +289,13 @@ def member_menu(db):
         if choice == '5':
             main_menu(db)
         elif choice == '1':
-            get_member_profile()
+            get_member_profile(db, member_email)
         elif choice == '2':
-            profile_management(db)
+            profile_management(db, member_email)
         elif choice == '3':
-            get_training_session_schedule()
-            session_choice = int(input("From the available sessions, pick a time you would like: "))
-            #TODO: Validate input
-            schedule_member_session(db, session_choice)
+            get_training_session_schedule(db)
+            session_choice = int(input("From the available sessions, pick the ID of a session you would like: "))
+            schedule_member_session(db, session_choice, member_email)
         elif choice == '4':
             get_fitness_classes_table()
             session_choice = int(input("From the available sessions, pick a time you would like: "))
@@ -397,7 +432,7 @@ def admin_menu(db):
 def main():
     
     db = get_db_connection()
-    #clear_database(db)
+    clear_database(db)
     initialize_database(db)
     main_menu(db)
 

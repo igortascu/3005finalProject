@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Rooms Table
 CREATE TABLE Rooms (
     RoomID SERIAL PRIMARY KEY,
@@ -9,7 +11,7 @@ CREATE TABLE Rooms (
 CREATE TABLE Equipment (
     EquipmentID SERIAL PRIMARY KEY,
     EquipmentName VARCHAR(255) NOT NULL,
-    MaintenanceDate DATE NOT NULL
+    LastMaintenanceDate DATE NOT NULL
 );
 
 -- Members Table
@@ -18,6 +20,7 @@ CREATE TABLE Members (
     FirstName VARCHAR(255) NOT NULL,
     LastName VARCHAR(255) NOT NULL,
     Email VARCHAR(255) UNIQUE NOT NULL,
+    Password VARCHAR(255) NOT NULL,
     DateOfBirth DATE NOT NULL,
     FitnessGoals TEXT,
     HealthMetrics TEXT 
@@ -29,6 +32,7 @@ CREATE TABLE Trainers (
     FirstName VARCHAR(255) NOT NULL,
     LastName VARCHAR(255) NOT NULL,
     Email VARCHAR(255) UNIQUE NOT NULL,
+    Password VARCHAR(255) NOT NULL,
     Availability TEXT
 );
 
@@ -38,6 +42,7 @@ CREATE TABLE AdministrativeStaff (
     FirstName VARCHAR(255) NOT NULL,
     LastName VARCHAR(255) NOT NULL,
     Email VARCHAR(255) UNIQUE NOT NULL,
+    Password VARCHAR(255) NOT NULL,
     Role VARCHAR(255) NOT NULL
 );
 
