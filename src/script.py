@@ -6,52 +6,9 @@ script.py - source code file for COMP 3005 Final Project V2, executes the progra
 '''
 
 import psycopg2
+import re
 from datetime import datetime
 from queries import *
-
-# ---------------------------------- HELPER FUNCTIONS ----------------------------------#
-def is_valid_date(date_text):
-    try:
-        datetime.strptime(date_text, '%Y-%m-%d')
-        return True
-    except ValueError:
-        return False
-    
-def is_valid_id(id_str):
-    if not id_str.isdigit():
-        return False
-    id_val = int(id_str)
-    return id_val > 0
-
-def profile_management(db):
-    print("\n--- Profile Management ---")
-    email = input("Please enter your email to identify your profile: ").strip()
-    # TODO: Validate that the email exists in the database
-
-    print("Which attribute would you like to update?")
-    print("1. First Name")
-    print("2. Last Name")
-    print("3. Date of Birth")
-    print("4. Fitness Goals")
-    print("5. Health Metrics")
-    attribute_choice = input("Enter the number of the attribute you want to update: ").strip()
-    
-    attribute_map = {
-        '1': 'FirstName',
-        '2': 'LastName',
-        '3': 'DateOfBirth',
-        '4': 'FitnessGoals',
-        '5': 'HealthMetrics'
-    }
-
-    if attribute_choice in attribute_map:
-        new_value = input(f"Enter the new value for {attribute_map[attribute_choice]}: ").strip()
-        # TODO: Validate the new_value as appropriate (e.g., date format for DateOfBirth)
-        update_member_attribute(db, email, attribute_map[attribute_choice], new_value)
-    else:
-        print("Invalid choice. Please enter a number between 1-5.")
-    
-    input("Press Enter to return to the Member Menu...")
 
 # ------------------------------ DB INITIALIZATION FUNCTIONS ------------------------------#
 
@@ -118,6 +75,56 @@ def clear_database(db):
     finally:
         cur.close()
 
+# ---------------------------------- HELPER FUNCTIONS ----------------------------------#
+def is_valid_date(date_text):
+    try:
+        datetime.strptime(date_text, '%Y-%m-%d')
+        return True
+    except ValueError:
+        return False
+    
+def is_valid_id(id_str):
+    if not id_str.isdigit():
+        return False
+    id_val = int(id_str)
+    return id_val > 0
+
+def validate_email(email):
+    email_regex = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    return re.fullmatch(email_regex, email)
+
+def profile_management(db):
+    print("\n--- Profile Management ---")
+    email = input("Please enter your email to identify your profile: ").strip()
+    # TODO: Validate that the email exists in the database
+
+    print("Which attribute would you like to update?")
+    print("1. First Name")
+    print("2. Last Name")
+    print("3. Date of Birth")
+    print("4. Fitness Goals")
+    print("5. Health Metrics")
+    attribute_choice = input("Enter the number of the attribute you want to update: ").strip()
+    
+    attribute_map = {
+        '1': 'FirstName',
+        '2': 'LastName',
+        '3': 'DateOfBirth',
+        '4': 'FitnessGoals',
+        '5': 'HealthMetrics'
+    }
+
+    if attribute_choice in attribute_map:
+        new_value = input(f"Enter the new value for {attribute_map[attribute_choice]}: ").strip()
+        # TODO: Validate the new_value as appropriate (e.g., date format for DateOfBirth)
+        update_member_attribute(db, email, attribute_map[attribute_choice], new_value)
+    else:
+        print("Invalid choice. Please enter a number between 1-5.")
+    
+    input("Press Enter to return to the Member Menu...")
+
+
+# ------------------------------ MENU CLI FUNCTIONS ------------------------------#
 '''
     Main menu function that prints the main menu and handles input prompts
 
@@ -125,7 +132,6 @@ def clear_database(db):
         db: the database connection in order to access it and query it as user selects options
 '''
 
-# ------------------------------ MENU CLI FUNCTIONS ------------------------------#
 def main_menu(db):
 
     while True:
@@ -139,18 +145,31 @@ def main_menu(db):
         choice = input("Enter your choice (1/2/3/Q): ").strip().upper() 
         
         if choice == '1':
-            member_menu(db)
+            user_login(db)
         elif choice == '2':
             trainer_menu(db)
         elif choice == '3':
             admin_menu(db)
         elif choice == 'Q':
-            print("Exiting the program. Goodbye!")
+            print("Exiting the application.")
             return
         else:
             print("Invalid choice. Please enter 1, 2, 3, or Q.")
             main_menu(db)
 
+def user_login(db):
+    print("Are you a returning or new member?")
+    print("1. Returning Member")
+    print("2. New Member")
+    member_status = int(input("Status: "))
+    
+    if member_status == 1:
+        member_menu(db)
+    else:
+        print("Welcome to our Gym! Enter your email and password to create an account!")
+        email = input("Email: ")
+        password = input("Password: ")
+        register_user(email, password)
 '''
     Member menu function that prints the menu for members and queries respective to their choice
     
@@ -158,6 +177,8 @@ def main_menu(db):
         db: the database connection in order to access it and query it as user selects options
 '''
 def member_menu(db):
+    print("WELCOME!")
+    
     while True:
         print("\n--- Member Menu ---")
         print("1. View Profile")
@@ -309,7 +330,6 @@ def admin_menu(db):
                     status = input("Enter the billing status (Paid/Unpaid): ")
                     # TODO: Validate inputs
                     process_billing(db, member_id, amount, date, status)
-
 
 '''
     Main function for testing script
