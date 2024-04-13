@@ -6,8 +6,9 @@ VALUES
 
 INSERT INTO Trainers (FirstName, LastName, Email, Availability)
 VALUES 
-('Mark', 'Brown', 'mark.brown@gmail.com', '["Monday 09:00-11:00", "Wednesday 14:00-16:00"]'),
+('Mark', 'Brown', 'mark.brown@gmail.com', '["Monday 09:00-11:00", "Friday 14:00-16:00"]'),
 ('Emily', 'Johnson', 'emily.johnson@gmail.com', '["Tuesday 10:00-12:00", "Thursday 15:00-17:00"]');
+('Jon', 'Jones', 'jon.jones@gmail.com', '["Saturday 10:00-12:00", "Sunday 15:00-17:00"]');
 
 INSERT INTO AdministrativeStaff (FirstName, LastName, Email, Role)
 VALUES 
@@ -33,7 +34,7 @@ VALUES
 ('Cable Machine #1', '2023-07-05'),
 ('Cable Machine #2', '2023-07-05'),
 ('Bench Set #1', '2023-07-05');
-('Bench Set #1', '2023-07-05');
+('Bench Set #2', '2023-07-05');
 
 INSERT INTO PersonalTrainingSessions (MemberID, TrainerID, DateTime, Status)
 VALUES 
@@ -47,3 +48,4 @@ VALUES
 INSERT INTO Billing (MemberID, Amount, Date, PaymentStatus)
 VALUES 
 (1, 50.00, '2024-04-02', 'Paid');
+(2, 50.00, '2024-04-06', 'Paid');
