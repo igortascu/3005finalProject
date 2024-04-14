@@ -207,14 +207,14 @@ def trainer_login(db):
             """, (email, password))
             trainer = cur.fetchone()
             if trainer:
+                trainer_id = trainer[0]
                 print(f"Welcome {trainer[1]} {trainer[2]}!")
-                # get id
-                id = 0
-                trainer_menu(db, id)
+                trainer_menu(db, trainer_id)
             else:
                 print("Invalid login credentials.")
     except Exception as e:
         print(f"An error occurred during login: {e}")
+
 
 '''
     Admin login function that logs in the admin staff
@@ -317,7 +317,7 @@ def member_menu(db, member_email):
 
 def display_member_dashboard(member_email):
     print("\n--- Member Dashboard ---")
-    # Example of hardcoded exercise routines
+
     exercise_routines = [
         "Monday: Cardio - 30 minutes of running",
         "Wednesday: Strength Training - 45 minutes of weight lifting",

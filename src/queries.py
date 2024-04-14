@@ -128,7 +128,7 @@ def schedule_member_session(db, member_email, trainer_id):
     print("Scheduling Personal Training Session...")
     try:
         with db.cursor() as cur:
-            # Fetch the trainer's next available time
+            # Get the trainer's next available time
             cur.execute("""
                 SELECT Availability FROM Trainers
                 WHERE TrainerID = %s AND IsAvailable = TRUE;
@@ -148,7 +148,7 @@ def schedule_member_session(db, member_email, trainer_id):
                         INSERT INTO PersonalTrainingSessions (MemberID, TrainerID, ScheduledTime, Status)
                         VALUES (%s, %s, %s, 'Booked');
                     """, (member_id, trainer_id, availability[0]))
-                    # Optionally, update the trainer's availability
+                    # Update the trainer's availability
                     cur.execute("""
                         UPDATE Trainers
                         SET IsAvailable = FALSE
@@ -197,7 +197,7 @@ def register_for_fitness_class(db, member_email, class_id):
             """, (class_id,))
             class_info = cur.fetchone()
             if class_info:
-                # Insert a record into the associative table that links members to classes
+                # Insert a the member data into the MemebersGroupClasses Table which is responsible just for storing memebers that are registerd to classes
                 cur.execute("""
                     INSERT INTO MembersGroupClasses (MemberID, ClassID)
                     SELECT MemberID, %s FROM Members WHERE Email = %s;
@@ -254,7 +254,6 @@ def get_trainer_schedule(db, trainer_id):
 def set_trainer_availability(db, trainer_id, new_availability):
     try:
         with db.cursor() as cur:
-            # Assuming new_availability is a string representing the trainer's new available timestamp, e.g., '2024-04-20 09:00:00'
             cur.execute("""
                 UPDATE Trainers
                 SET Availability = %s, IsAvailable = TRUE
