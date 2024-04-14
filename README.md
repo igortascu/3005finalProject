@@ -19,4 +19,5 @@ to your DB
 
 3. Run the python script and play around with the prompts to test DB interactivity
 
-DEMO LINK: https://youtu.be/9sr1bnJ0Kf4
+DEMO LINK: https://youtu.be/uirSTOG_jJ8
+
