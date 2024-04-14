@@ -406,7 +406,7 @@ def remove_class_schedule(db, class_id):
                 print("No class found with the specified ID.")
     except Exception as e:
         db.rollback()
-        print(f"An error occurred while removing the class from the schedule: {e}")
+        print(f"An error occurred while removiqng the class from the schedule: {e}")
 
 def process_billing(db, member_id, amount, date, status):
     try:
