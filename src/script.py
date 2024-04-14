@@ -20,7 +20,7 @@ from queries import *
         connection: the databse connection object
 '''
 def get_db_connection():
-    connection_parameters = "dbname='finalProject' user='postgres' host='localhost' password='Igor1999'"
+    connection_parameters = "dbname='finalProject' user='postgres' host='localhost' password='<>'"
    
     try:
         conn = psycopg2.connect(connection_parameters)
