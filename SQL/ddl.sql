@@ -7,6 +7,13 @@ CREATE TABLE Rooms (
     Capacity INT NOT NULL
 );
 
+CREATE TABLE RoomBookings (
+    BookingID SERIAL PRIMARY KEY,
+    RoomID INT NOT NULL,
+    BookingDateTime TIMESTAMP NOT NULL,
+    FOREIGN KEY (RoomID) REFERENCES Rooms(RoomID)
+);
+
 -- Equipment Table
 CREATE TABLE Equipment (
     EquipmentID SERIAL PRIMARY KEY,

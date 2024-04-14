@@ -291,10 +291,11 @@ def member_menu(db, member_email):
         print("2. Update Profile")
         print("3. Schedule a Training Session")
         print("4. Join a Group Fitness Class")
-        print("5. Return to Main Menu")
+        print("5. View dashboard ")
+        print("6. Return to Main Menu")
         
         choice = input("Enter your choice: ")
-        if choice == '5':
+        if choice == '6':
             main_menu(db)
         elif choice == '1':
             get_member_profile(db, member_email)
@@ -311,7 +312,28 @@ def member_menu(db, member_email):
             get_fitness_classes_table(db)
             session_choice = int(input("From the available sessions, pick a slot ID you would like: "))
             register_for_fitness_class(db, member_email, session_choice)
+        elif choice == '5':
+            display_member_dashboard(member_email)
 
+def display_member_dashboard(member_email):
+    print("\n--- Member Dashboard ---")
+    # Example of hardcoded exercise routines
+    exercise_routines = [
+        "Monday: Cardio - 30 minutes of running",
+        "Wednesday: Strength Training - 45 minutes of weight lifting",
+        "Friday: Flexibility - 30 minutes of yoga"
+    ]
+
+    health_status = "Healthy weight"
+    print("Exercise Routines:")
+    for routine in exercise_routines:
+        print(routine)
+
+    print(f"\nHealth Status: {health_status}")
+    fitness_achievements = "No achievements yet"
+    print(f"\nFitness Achievements: {fitness_achievements}")
+
+    input("\nPress Enter to return to the Member Menu...")
 '''
     Trainer menu function that prints the menu for trainers and queries respective to their choice
 
@@ -324,10 +346,11 @@ def trainer_menu(db, id):
         print("1. View Schedule")
         print("2. Set Availability")
         print("3. View Member Profiles")
-        print("4. Return to Main Menu")
+        print("4. Search Member By Email")
+        print("5. Return to Main Menu")
         
         choice = input("Enter your choice: ")
-        if choice == '4':
+        if choice == '5':
             main_menu(db)
         elif choice == '1':
             get_trainer_schedule(db, id)
@@ -336,7 +359,32 @@ def trainer_menu(db, id):
             set_trainer_availability(db, id, availabilty)
         elif choice == '3':
             get_all_members(db)
+        elif choice == '4':
+            email = input("Enter your email: ")
+            get_member_profile(db, email)
         
+def room_booking_management(db):
+    while True:
+        print("\n--- Room Booking Management ---")
+        print("1. View Rooms")
+        print("2. Book a Room")
+        print("3. Cancel a Room Booking")
+        print("4. Go back")
+
+        booking_choice = input("Enter your choice: ")
+
+        if booking_choice == '4':
+            break
+        elif booking_choice == '1':
+            get_rooms(db)
+        elif booking_choice == '2':
+            room_id = int(input("Enter the room ID to book: "))
+            booking_date = input("Enter the booking date for the room (YYYY-MM-DD HH:MM): ")
+            #book_room(db, room_id, booking_date)
+        elif booking_choice == '3':
+            booking_id = int(input("Enter the booking ID to cancel: "))
+            #cancel_room_booking(db, booking_id)
+
 '''
     Admin menu function that prints the menu for admins and queries respective to their choice
 
@@ -356,8 +404,7 @@ def admin_menu(db):
         if choice == '5':
             main_menu(db)
         elif choice == '1':
-            get_rooms(db)
-            print("What would you like to manage? ")
+            room_booking_management(db)
         elif choice == '2':
             get_equipment_table(db)
 

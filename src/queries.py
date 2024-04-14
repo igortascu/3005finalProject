@@ -411,14 +411,27 @@ def remove_class_schedule(db, class_id):
 def process_billing(db, member_id, amount, date, status):
     try:
         with db.cursor() as cur:
+            # Check if there's an existing record for that date.
             cur.execute("""
-                INSERT INTO Billing (MemberID, Amount, Date, PaymentStatus) 
-                VALUES (%s, %s, %s, %s) 
-                ON CONFLICT (MemberID) DO UPDATE 
-                SET Amount = excluded.Amount, Date = excluded.Date, PaymentStatus = excluded.PaymentStatus
-            """, (member_id, amount, date, status))
+                SELECT BillID FROM Billing 
+                WHERE MemberID = %s AND Date = %s;
+            """, (member_id, date))
+            bill_record = cur.fetchone()
+
+            if bill_record:
+                # Update the existing record.
+                cur.execute("""
+                    UPDATE Billing SET Amount = %s, PaymentStatus = %s
+                    WHERE MemberID = %s AND Date = %s;
+                """, (amount, status, member_id, date))
+            else:
+                # Insert a new record if one does not exist.
+                cur.execute("""
+                    INSERT INTO Billing (MemberID, Amount, Date, PaymentStatus)
+                    VALUES (%s, %s, %s, %s);
+                """, (member_id, amount, date, status))
             db.commit()
-            print(f"Billing processed for member ID {member_id}: Amount: {amount}, Date: {date}, Status: {status}.")
+            print(f"Billing record updated for member ID {member_id}: Amount: {amount}, Date: {date}, Status: {status}.")
     except Exception as e:
         db.rollback()
         print(f"An error occurred while processing billing: {e}")
