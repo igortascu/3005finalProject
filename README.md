@@ -19,5 +19,5 @@ to your DB
 
 3. Run the python script and play around with the prompts to test DB interactivity
 
-DEMO LINK: https://youtu.be/uirSTOG_jJ8
+4. Make sure all dependencies and python packages are installed if not already. (Use pip or whatever installer you have to download them)
 
