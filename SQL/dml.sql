@@ -4,7 +4,6 @@ VALUES
 ('Igor', 'Tascu', 'igortascu@gmail.com', crypt('Igor1999', gen_salt('bf')), '2002-09-10', '{"weightTarget":"180lbs","timeTarget":"3mo"}', '{"currentWeight":"155lbs","heartRate":"50bpm"}'),
 ('Jane', 'Smith', 'jane.smith@gmail.com', crypt('Jane2931', gen_salt('bf')), '1990-07-22', '{"weightTarget":"130lbs"}', '{"currentWeight":"150lbs","heartRate":"80bpm"}');
 
--- Assuming you are using a specific day for the schedule, replace 'YYYY-MM-DD' with the actual date
 INSERT INTO Trainers (FirstName, LastName, Email, Password, Availability, IsAvailable)
 VALUES 
 ('Mark', 'Brown', 'mark.brown@gmail.com', crypt('Mark', gen_salt('bf')), '2024-04-16 09:00:00'::timestamp, TRUE),
